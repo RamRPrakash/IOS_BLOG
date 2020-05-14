@@ -16,20 +16,59 @@ class Upload extends Component {
 
         }
     }
-    onUpload = () => {
-        this.setState({ uploadedData: this.state.editedData })
+    componentWillMount(){
+        Api.get('http://localhost:3334/ios').then((res) => {
+            console.log(res)
+            if (res.data) {
+                var data = res.data
+                var headings = data && data.map((item, index) => {
+                    return item.heading
+                })
+                console.log(headings)
+                this.state.myBlogs = data || []
+                console.log(this.state.myBlogs)
+
+                this.setState({
+                    headings: headings,
+                    myBlogs: data || []
+                })
+            }
+        })
     }
+    // onUpload = () => {
+    //     this.setState({ uploadedData: this.state.editedData })
+    // }
     onSend=()=>{
         var data = {
             heading: this.state.heading , 
             description: this.state.editedData
         }
-        console.log(data)
-        if (this.state.heading && this.state.editedData){
-            Api.post('http://localhost:3310/updates', data).then((res)=>{
-                console.log(res)
-            })
+        
+       var title = [...this.state.headings]
+        var unique = title.findIndex(item => item == this.state.heading)
+        console.log(unique)
+        if (unique === -1){
+            if (this.state.heading && this.state.editedData) {
+                Api.post('http://localhost:3334/updates', data).then((res) => {
+                    console.log(res)
+                    if (res){
+                        alert('Content Update successfully !!!')
+                        this.setState({ heading: '', editedData: '', uploadedData : ''})
+                    }
+                })
+            }
+            else{
+                alert('Missing Heading/Content')
+                this.setState({ heading: '', editedData: '', uploadedData: '' })
+                return
+            }
         }
+        else{
+            alert('Please choose different heading !!')
+            this.setState({ heading: '' })
+
+        }
+
     }
     render() {
         return (<div class="container">
@@ -62,7 +101,7 @@ class Upload extends Component {
                         }}
                     />
                 </div>
-                <div style={{ margin: "15px 126px 12px 1087px" }} onClick={() => this.onUpload()}><Button variant="contained" color="primary">Upload</Button></div>
+                {/* <div style={{ margin: "15px 126px 12px 1087px" }} onClick={() => this.onUpload()}><Button variant="contained" color="primary">Upload</Button></div> */}
                 <div style={{ margin: "15px 126px 12px 1087px" }} onClick={() => this.onSend()}><Button variant="contained" color="primary">Send</Button></div>
 
                 {ReactHtmlParser(this.state.uploadedData)}
